@@ -1,30 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { analyze, getChatResponse } from "@/actions/chat";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { WineAnalysisResponse } from "@/actions/chat";
+import { Analysis, Message, Chat } from "@/types";
+import { ChatState } from "@/store/types";
+import { loadFromLocalStorage } from "@/store/clientStorage";
 
-export interface Conversation {
-  id: number;
-  title: string;
-  messages: ChatCompletionMessageParam[];
-  totalTokens: number;
-  tokensIn: number;
-  tokensOut: number;
-  tokenLimit: number;
-  warnTokenLimit: boolean;
-  analysis: WineAnalysisResponse;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ChatState {
-  conversations: {
-    data: Conversation[];
-    error: string | null;
-  };
-  status: "idle" | "loading" | "failed" | "analyzing";
-  activeConversation: number | null;
-}
+const chatTokenLimit = 4000; // arbitrary limit for now...
 
 export const initialState: ChatState = {
   conversations: {
@@ -38,17 +18,17 @@ export const initialState: ChatState = {
 export const createConversation = createAsyncThunk(
   "chat/createConversation",
   async ({ title }: { title: string; user?: number }) => {
-    // In the future, this will interface with your API
-    const conversation: Conversation = {
+    // In the future, there will be users
+    const conversation: Chat = {
       id: Date.now(),
       title,
-      messages: [] as ChatCompletionMessageParam[],
+      messages: [] as Message[],
       totalTokens: 0,
       tokensIn: 0,
       tokensOut: 0,
-      tokenLimit: 4000, // Example limit
+      tokenLimit: chatTokenLimit,
       warnTokenLimit: false,
-      analysis: {} as WineAnalysisResponse,
+      analysis: {} as Analysis,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -81,7 +61,7 @@ export const sendMessage = createAsyncThunk(
   }: {
     conversation: number;
     message: string;
-    messageHistory: Array<ChatCompletionMessageParam>;
+    messageHistory: Array<Message>;
   }) => {
     const response = await getChatResponse(
       [...messageHistory, { role: "user", content: message }],
@@ -97,11 +77,11 @@ export const sendMessage = createAsyncThunk(
         {
           role: "user",
           content: message,
-        } as ChatCompletionMessageParam,
+        } as Message,
         {
           role: "assistant",
           content: response.content,
-        } as ChatCompletionMessageParam,
+        } as Message,
       ],
     };
   }
@@ -109,7 +89,7 @@ export const sendMessage = createAsyncThunk(
 
 const chatSlice = createSlice({
   name: "chat",
-  initialState,
+  initialState: loadFromLocalStorage() || initialState,
   reducers: {
     setActiveConversation(state, action: PayloadAction<number>) {
       state.activeConversation = action.payload;
