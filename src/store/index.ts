@@ -1,16 +1,22 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import chatReducer from "./chatSlice";
-import { localStorageMiddleware } from "./clientStorageMiddleware";
+
+const chatPersistConfig = {
+  key: "chat",
+  storage,
+};
 
 export const store = configureStore({
   reducer: {
-    chat: chatReducer,
+    chat: persistReducer(chatPersistConfig, chatReducer),
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(localStorageMiddleware),
   // Enable Redux DevTools in development
   devTools: process.env.NODE_ENV !== "production",
 });
+
+export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

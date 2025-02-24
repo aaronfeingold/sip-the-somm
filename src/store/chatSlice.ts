@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { analyze, getChatResponse } from "@/actions/chat";
 import { Analysis, Message, Chat } from "@/types";
 import { ChatState } from "@/store/types";
-import { loadFromLocalStorage } from "@/store/clientStorage";
 
 const chatTokenLimit = 4000; // arbitrary limit for now...
 
@@ -89,7 +88,7 @@ export const sendMessage = createAsyncThunk(
 
 const chatSlice = createSlice({
   name: "chat",
-  initialState: loadFromLocalStorage() || initialState,
+  initialState,
   reducers: {
     setActiveConversation(state, action: PayloadAction<number>) {
       state.activeConversation = action.payload;
