@@ -78,7 +78,7 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
   });
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-pink-900 text-white p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center text-white p-6">
       <SipOwl className="mb-12" />
 
       <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
