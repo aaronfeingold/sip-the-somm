@@ -1,4 +1,6 @@
-import { configureStore } from '@reduxjs/toolkit';
+"use client";
+
+import { configureStore } from "@reduxjs/toolkit";
 import {
   persistStore,
   persistReducer,
@@ -11,6 +13,7 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import chatReducer from "./chatSlice";
+import { ChatState } from "./types";
 
 const chatPersistConfig = {
   key: "chat",
@@ -19,7 +22,7 @@ const chatPersistConfig = {
 
 export const store = configureStore({
   reducer: {
-    chat: persistReducer(chatPersistConfig, chatReducer),
+    chat: persistReducer<ChatState>(chatPersistConfig, chatReducer),
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
