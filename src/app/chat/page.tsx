@@ -11,7 +11,6 @@ export default function Page() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { status } = useAppSelector((state) => state.chat);
-  const isAnalyzing = status === "analyzing" || "loading";
 
   const handleImagesSelect = async (images: { food: string; wine: string }) => {
     try {
@@ -22,7 +21,7 @@ export default function Page() {
           user: 1,
         })
       ).unwrap();
-
+      setHasStartedChat(true);
       // Analyze image
       await dispatch(
         generateAnalysis({
@@ -34,24 +33,18 @@ export default function Page() {
 
       // Navigate to the conversation
       router.push(`/chat/${conversation.id}`);
-      setHasStartedChat(true);
     } catch (error) {
       console.error("Failed to analyze image:", error);
     } finally {
     }
   };
 
-  if (!hasStartedChat) {
     return (
       <div className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
         {!hasStartedChat && (
           <InitialUpload onImagesSelect={handleImagesSelect} />
         )}
+        {status === "loading" || (status === "analyzing" && <Loading />)}
       </div>
     );
-  }
-
-  if (isAnalyzing) {
-    return <Loading />;
-  }
 }
