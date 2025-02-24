@@ -3,7 +3,7 @@
 import { openai, DEFAULT_MODEL, MAX_COMPLETION_TOKENS } from "@/lib/openai";
 import { revalidatePath } from "next/cache";
 import humps from "humps";
-
+import type { Message, Analysis, CompletionUsage } from "@/types";
 import type {
   ChatCompletionMessageParam,
   ChatCompletionContentPart,
@@ -12,40 +12,23 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionContentPartImage,
 } from "openai/resources/chat/completions";
-
-interface CompletionUsage {
-  completionTokens: number;
-  promptTokens: number;
-  totalTokens: number;
-}
+import { systemContent, userContentText } from "@/lib/constants";
 
 const defaultUsage: CompletionUsage = {
   completionTokens: 0,
   promptTokens: 0,
   totalTokens: 0,
 };
-export interface WineAnalysisResponse {
-  pairings: Array<{
-    dish: string;
-    wines: Array<{
-      name: string;
-      description: string;
-      confidence: number;
-    }>;
-  }>;
-  explanation: string;
-}
 
 export async function analyze(
   image1Base64: string,
   image2Base64?: string
-): Promise<WineAnalysisResponse> {
+): Promise<Analysis> {
   try {
     const messages: Array<ChatCompletionMessageParam> = [
       {
         role: "system",
-        content:
-          "You are a professional sommelier AI specialized in wine pairing. Analyze the food images and provide detailed wine recommendations.",
+        content: systemContent,
       } as ChatCompletionSystemMessageParam,
       {
         role: "user",
@@ -64,7 +47,7 @@ export async function analyze(
           } as ChatCompletionContentPartImage,
           {
             type: "text",
-            text: "Please analyze these dishes and suggest wine pairings. Consider flavor profiles, intensity, and cooking methods.",
+            text: userContentText,
           } as ChatCompletionContentPart,
         ] as Array<ChatCompletionContentPart>,
       } as ChatCompletionUserMessageParam,
@@ -78,7 +61,7 @@ export async function analyze(
 
     // Parse the response into structured data
     // You might need to adjust this based on actual response format
-    const analysis: WineAnalysisResponse = JSON.parse(
+    const analysis: Analysis = JSON.parse(
       response.choices[0].message.content || "{}"
     );
 
@@ -90,7 +73,7 @@ export async function analyze(
 }
 
 export async function getChatResponse(
-  messages: Array<ChatCompletionMessageParam>,
+  messages: Array<Message>,
   conversationId: number,
   maxCompletionTokens?: number
 ): Promise<{ content: string; usage: CompletionUsage }> {
