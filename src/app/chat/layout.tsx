@@ -31,7 +31,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       <div
         className={`${
           isSidebarOpen ? "w-64" : "w-0"
-        } bg-pink-950 flex-shrink-0 transition-all duration-300 pt-24`}
+        } bg-pink-950 flex-shrink-0 transition-all duration-300 pt-24 overflow-hidden`}
       >
         <div className="flex flex-col h-full">
           <Link
