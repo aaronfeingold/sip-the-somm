@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { InitialUpload } from "@/components/chat/InitialUpload";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createConversation, generateAnalysis } from "@/store/chatSlice";
 import Loading from "@/components/loading";
 
@@ -10,6 +10,8 @@ export default function Page() {
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { status } = useAppSelector((state) => state.chat);
+  const isAnalyzing = status === "analyzing" || "loading";
 
   const handleImagesSelect = async (images: { food: string; wine: string }) => {
     try {
@@ -45,8 +47,11 @@ export default function Page() {
         {!hasStartedChat && (
           <InitialUpload onImagesSelect={handleImagesSelect} />
         )}
-        <Loading />
       </div>
     );
+  }
+
+  if (isAnalyzing) {
+    return <Loading />;
   }
 }
