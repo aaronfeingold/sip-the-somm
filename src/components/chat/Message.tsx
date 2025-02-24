@@ -7,10 +7,9 @@ interface ChatMessageProps {
   message: Message;
   key: number;
 }
-export function ChatMessage({ message, key }: ChatMessageProps) {
+export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div
-      key={key}
       className={`flex ${
         message.role === "user" ? "justify-end" : "justify-start"
       }`}
