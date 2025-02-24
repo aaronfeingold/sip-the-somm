@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Upload } from "lucide-react";
 import { SipOwl } from "@/components/SipOwl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useDropzone } from "react-dropzone";
 
 interface DualUploadProps {
@@ -29,23 +30,24 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        const newImages = {
-          ...uploadedImages,
+        setUploadedImages((prev) => ({
+          ...prev,
           [type]: base64.split(",")[1],
-        };
-        setUploadedImages(newImages);
-
-        // If both images are uploaded, trigger the callback
-        if (type === "food" && uploadedImages.wine) {
-          onImagesSelect({ food: newImages.food!, wine: uploadedImages.wine });
-        } else if (type === "wine" && uploadedImages.food) {
-          onImagesSelect({ food: uploadedImages.food, wine: newImages.wine! });
-        }
+        }));
       };
       reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
       setError(`Failed to process ${type} menu image. Please try again.`);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (uploadedImages.food && uploadedImages.wine) {
+      onImagesSelect({
+        food: uploadedImages.food,
+        wine: uploadedImages.wine,
+      });
     }
   };
 
@@ -76,6 +78,8 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
     accept: { "image/*": [] },
     maxFiles: 1,
   });
+
+  const bothImagesUploaded = uploadedImages.food && uploadedImages.wine;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white p-6">
@@ -148,6 +152,17 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
+          </div>
+        )}
+
+        {bothImagesUploaded && (
+          <div className="col-span-full flex justify-center mt-4">
+            <Button
+              onClick={handleSubmit}
+              className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-2"
+            >
+              Analyze Menus
+            </Button>
           </div>
         )}
       </div>
