@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppSelector } from "@/store/hooks";
-import { SipOwl } from "@/components/SipOwl";
+import Image from "next/image";
 
 export default function Loading() {
   const { status } = useAppSelector((state) => state.chat);
@@ -9,8 +9,16 @@ export default function Loading() {
   if (status === "analyzing") {
     return (
       <div className="flex justify-center items-center space-x-4">
-        <div className="mb-12 w-full px-4">
-          <SipOwl />
+        <div className="min-h-screen flex flex-col items-center justify-center text-white p-6">
+          <div className="mb-12 w-full px-4">
+            <Image
+              src="/wineLoader.gif" // Put your GIF in the public folder
+              alt="Loading..."
+              width={225} // Adjust size as needed
+              height={225}
+              priority // This ensures the loader itself loads quickly
+            />
+          </div>
         </div>
       </div>
     );
