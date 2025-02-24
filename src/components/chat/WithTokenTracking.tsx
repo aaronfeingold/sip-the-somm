@@ -2,7 +2,8 @@
 
 import { TokenWarning } from "./TokenWarning";
 import { useAppSelector } from "@/store/hooks";
-import type { Chat, ChatState } from "@/store/chatSlice";
+import type { ChatState } from "@/store/types";
+import type { Chat } from "@/types";
 
 interface WithTokenTrackingProps {
   children: React.ReactNode;
