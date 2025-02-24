@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, PlusSquare } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SipOwl } from "@/components/SipOwl";
@@ -14,7 +14,7 @@ interface ChatLayoutProps {
 export default function ChatLayout({ children }: ChatLayoutProps) {
   const pathname = usePathname();
   const conversations = useAppSelector((state) => state.chat.conversations);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-full">
@@ -31,14 +31,14 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       <div
         className={`${
           isSidebarOpen ? "w-64" : "w-0"
-        } bg-pink-950 flex-shrink-0 transition-all duration-300 pt-24 overflow-hidden`}
+        } h-screen bg-pink-950 flex-shrink-0 transition-all duration-300 fixed left-0 top-0 z-40 pt-24 overflow-hidden`}
       >
         <div className="flex flex-col h-full">
           <Link
             href="/chat"
             className="flex items-center gap-2 m-2 p-2 bg-pink-800 hover:bg-pink-700 rounded-lg text-white transition-colors duration-200"
           >
-            <MessageSquare size={20} />
+            <PlusSquare size={20} />
             <span>New Analysis</span>
           </Link>
 
@@ -64,7 +64,13 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col pt-24">{children}</div>
+      <div
+        className={`flex-1 ${
+          isSidebarOpen ? "ml-64" : "ml-16"
+        } transition-all duration-300 h-screen overflow-y-auto`}
+      >
+        {children}
+      </div>
     </div>
   );
 }
