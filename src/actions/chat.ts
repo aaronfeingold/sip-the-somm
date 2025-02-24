@@ -54,7 +54,7 @@ export async function analyze(
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-turbo",
       messages,
       max_tokens: 500,
     } as ChatCompletionCreateParamsNonStreaming);
