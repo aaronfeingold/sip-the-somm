@@ -54,7 +54,7 @@ export default function Page() {
   return (
     <>
       <div className="flex flex-col h-full relative">
-        <div className="flex-1 overflow-y-auto pb-24">
+        <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto p-4 space-y-6">
             {conversation.warnTokenLimit && (
               <TokenWarning
@@ -63,11 +63,7 @@ export default function Page() {
               />
             )}
             {conversation.messages?.map((msg, idx) => (
-              <ChatMessage
-                key={idx}
-                message={msg}
-                showTokenCount={conversation.warnTokenLimit}
-              />
+              <ChatMessage key={idx} message={msg} />
             ))}
             <Loading />
             <div ref={messagesEndRef} />
