@@ -18,6 +18,7 @@ import { ChatState } from "./types";
 const chatPersistConfig = {
   key: "chat",
   storage,
+  whitelist: ["conversations"],
 };
 
 export const store = configureStore({
