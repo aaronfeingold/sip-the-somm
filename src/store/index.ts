@@ -12,8 +12,6 @@ export const store = configureStore({
   reducer: {
     chat: persistReducer(chatPersistConfig, chatReducer),
   },
-  // Enable Redux DevTools in development
-  devTools: process.env.NODE_ENV !== "production",
 });
 
 export const persistor = persistStore(store);
