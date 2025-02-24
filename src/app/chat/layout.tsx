@@ -17,7 +17,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
-    <div className="flex h-full bg-pink-900">
+    <div className="flex h-full">
       {/* Sip the Owl - clickable to toggle sidebar */}
       <div className="fixed top-4 left-4 z-50">
         <SipOwl
