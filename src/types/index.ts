@@ -18,7 +18,7 @@ interface CompletionUsage {
 
 interface Message {
   role: "user" | "assistant" | "developer";
-  content: string;
+  content: string; // string for text, unknown since IDK how to type markdown
 }
 
 interface Chat {
@@ -30,7 +30,7 @@ interface Chat {
   tokensOut: number;
   tokenLimit: number;
   warnTokenLimit: boolean;
-  analysis: Analysis;
+  analysis: string;
   images: {
     image1: string;
     image2: string;
