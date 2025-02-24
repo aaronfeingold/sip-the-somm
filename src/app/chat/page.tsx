@@ -41,12 +41,12 @@ export default function Page() {
 
   if (!hasStartedChat) {
     return (
-      <main className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
+      <div className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
         {!hasStartedChat && (
           <InitialUpload onImagesSelect={handleImagesSelect} />
         )}
         <Loading />
-      </main>
+      </div>
     );
   }
 }
