@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { analyze, getChatResponse } from "@/actions/chat";
-import { Analysis, Message, Chat } from "@/types";
+import { Message, Chat } from "@/types";
 import { ChatState } from "@/store/types";
 
 const chatTokenLimit = 4000; // arbitrary limit for now...
@@ -27,11 +27,6 @@ export const createConversation = createAsyncThunk(
       tokensOut: 0,
       tokenLimit: chatTokenLimit,
       warnTokenLimit: false,
-      analysis: {} as Analysis,
-      images: {
-        image1: "",
-        image2: "",
-      },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -136,11 +131,7 @@ const chatSlice = createSlice({
           (c) => c.id === action.payload.conversationId
         );
         if (conversation) {
-          conversation.analysis = action.payload.analysis;
-          conversation.images = {
-            image1: action.payload.image1,
-            image2: action.payload.image2 ?? "",
-          };
+          conversation.messages.push(action.payload.analysis);
         }
       })
       .addCase(generateAnalysis.rejected, (state, action) => {
