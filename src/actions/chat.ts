@@ -23,7 +23,7 @@ const defaultUsage: CompletionUsage = {
 export async function analyze(
   image1Base64: string,
   image2Base64?: string
-): Promise<Analysis> {
+): Promise<unknown> {
   try {
     const messages: Array<ChatCompletionMessageParam> = [
       {
@@ -59,13 +59,7 @@ export async function analyze(
       max_tokens: 500,
     } as ChatCompletionCreateParamsNonStreaming);
 
-    // Parse the response into structured data
-    // You might need to adjust this based on actual response format
-    const analysis: Analysis = JSON.parse(
-      response.choices[0].message.content || "{}"
-    );
-
-    return analysis;
+    return response.choices[0].message.content;
   } catch (error) {
     console.error("Error analyzing images:", error);
     throw error;
