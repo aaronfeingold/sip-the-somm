@@ -28,6 +28,10 @@ export const createConversation = createAsyncThunk(
       tokenLimit: chatTokenLimit,
       warnTokenLimit: false,
       analysis: {} as Analysis,
+      images: {
+        image1: "",
+        image2: "",
+      },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -47,7 +51,7 @@ export const generateAnalysis = createAsyncThunk(
     conversationId: number;
   }) => {
     const analysis = await analyze(image1, image2);
-    return { analysis, conversationId };
+    return { analysis, conversationId, image1, image2 };
   }
 );
 
@@ -131,7 +135,13 @@ const chatSlice = createSlice({
         const conversation = state.conversations.data.find(
           (c) => c.id === action.payload.conversationId
         );
-        if (conversation) conversation.analysis = action.payload.analysis;
+        if (conversation) {
+          conversation.analysis = action.payload.analysis;
+          conversation.images = {
+            image1: action.payload.image1,
+            image2: action.payload.image2 ?? "",
+          };
+        }
       })
       .addCase(generateAnalysis.rejected, (state, action) => {
         state.status = "failed";
