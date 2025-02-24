@@ -1,9 +1,9 @@
 "use client";
 
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import type { Message } from "@/store/chatSlice";
 
 interface ChatMessageProps {
-  message: ChatCompletionMessageParam;
+  message: Message;
   showTokenCount?: boolean;
 }
 
