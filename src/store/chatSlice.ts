@@ -22,11 +22,11 @@ export interface ChatState {
     data: Conversation[];
     error: string | null;
   };
-  status: "idle" | "loading" | "failed";
+  status: "idle" | "loading" | "failed" | "analyzing";
   activeConversation: number | null;
 }
 
-const initialState: ChatState = {
+export const initialState: ChatState = {
   conversations: {
     data: [],
     error: null,
@@ -145,7 +145,7 @@ const chatSlice = createSlice({
           action.error.message || "Failed to create conversation";
       })
       .addCase(generateAnalysis.pending, (state) => {
-        state.status = "loading";
+        state.status = "analyzing";
       })
       .addCase(generateAnalysis.fulfilled, (state, action) => {
         state.status = "idle";
