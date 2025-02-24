@@ -1,58 +1,139 @@
 import Image from "next/image";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { InitialUpload } from "@/components/chat/InitialUpload";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { type RootState } from "@/store";
+import {
+  createConversation,
+  generateAnalysis,
+  ChatState,
+} from "@/store/chatSlice";
+import ChatLayout from "@/app/chat/layout";
 import sipTheOwl from "@/public/sipTheOwl.svg";
 
+const LoadingSpinner = () => {
+  const status = useAppSelector((state) => state.chat.status);
+
+  if (status === "analyzing") {
+    return (
+      <div className="flex justify-center items-center space-x-4">
+        <div className="w-12 h-12 border-4 border-pink-400 rounded-full animate-spin border-t-transparent" />
+        <span className="text-pink-400">Analyzing wine pairings...</span>
+      </div>
+    );
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="flex justify-start">
+        <div className="bg-pink-950 p-4 rounded-lg">
+          <div className="flex space-x-2">
+            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" />
+            <div
+              className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"
+              style={{ animationDelay: "0.2s" }}
+            />
+            <div
+              className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"
+              style={{ animationDelay: "0.4s" }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 export default function Home() {
-  return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center bg-pink-900 text-white p-4 isolate px-6 pt-14 lg:px-8 overflow-hidden">
-      {/* Upper left gradient */}
-      <div className="absolute top-0 left-0 -z-10 transform-gpu overflow-hidden blur-3xl">
-        <div
-          className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:w-[72.1875rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
+  const [hasStartedChat, setHasStartedChat] = useState(false);
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
-      {/* Center gradient */}
-      <div className="absolute top-[calc(50%-30rem)] left-[calc(50%-30rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(50%-30rem)] sm:left-[calc(50%-30rem)]">
-        <div
-          className="relative aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
+  const handleImageSelect = async (imageBase64: string) => {
+    try {
+      // Create new conversation
+      const conversation = await dispatch(
+        createConversation({
+          title: "Wine Pairing Analysis",
+          user: 1,
+        })
+      ).unwrap();
 
-      {/* Lower right gradient */}
-      <div className="absolute bottom-0 right-[calc(50%-30rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:right-[calc(50%-30rem)]">
-        <div
-          className="relative aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        />
-      </div>
+      // Analyze image
+      await dispatch(
+        generateAnalysis({
+          image1: imageBase64,
+          conversationId: conversation.id,
+        })
+      ).unwrap();
 
-      {/* Main Content */}
-      <main className="relative z-10 flex flex-col items-center text-center w-full max-w-md mx-auto">
-        <div className="mb-12 w-full px-4">
-          <Image
-            src={sipTheOwl}
-            alt="SIP in Style Owl Logo"
-            width={192}
-            height={192}
-            className="w-48 h-48 md:w-56 md:h-56 object-contain hover:opacity-90 transition-opacity duration-300 mx-auto"
+      // Navigate to the conversation
+      router.push(`/chat/${conversation.id}`);
+      setHasStartedChat(true);
+    } catch (error) {
+      console.error("Failed to analyze image:", error);
+    } finally {
+    }
+  };
+
+  if (!hasStartedChat) {
+    return (
+      <div className="relative min-h-screen flex flex-col justify-center items-center bg-pink-900 text-white p-4 isolate px-6 pt-14 lg:px-8 overflow-hidden">
+        {/* Upper left gradient */}
+        <div className="absolute top-0 left-0 -z-10 transform-gpu overflow-hidden blur-3xl">
+          <div
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:w-[72.1875rem]"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
           />
         </div>
-      </main>
 
-      <footer className="relative z-10 mt-16 mb-8">
-        <span>SIP IN STYLE</span>
-      </footer>
-    </div>
-  );
+        {/* Center gradient */}
+        <div className="absolute top-[calc(50%-30rem)] left-[calc(50%-30rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(50%-30rem)] sm:left-[calc(50%-30rem)]">
+          <div
+            className="relative aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+          />
+        </div>
+
+        {/* Lower right gradient */}
+        <div className="absolute bottom-0 right-[calc(50%-30rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:right-[calc(50%-30rem)]">
+          <div
+            className="relative aspect-[1155/678] w-[72.1875rem] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
+            style={{
+              clipPath:
+                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+            }}
+          />
+        </div>
+
+        {/* Main Content */}
+        <main className="relative z-10 flex flex-col items-center text-center w-full max-w-md mx-auto">
+          <div className="mb-12 w-full px-4">
+            <Image
+              src={sipTheOwl}
+              alt="SIP in Style Owl Logo"
+              width={192}
+              height={192}
+              className="w-48 h-48 md:w-56 md:h-56 object-contain hover:opacity-90 transition-opacity duration-300 mx-auto"
+            />
+          </div>
+        </main>
+
+        <InitialUpload onImageSelect={handleImageSelect} />
+
+        <footer className="relative z-10 mt-16 mb-8">
+          <span>SIP IN STYLE</span>
+        </footer>
+      </div>
+    );
+  }
 }
