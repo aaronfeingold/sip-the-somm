@@ -1,6 +1,6 @@
 "use client";
 
-import type { Message } from "@/store/chatSlice";
+import type { Message } from "@/types";
 
 interface ChatMessageProps {
   message: Message;
