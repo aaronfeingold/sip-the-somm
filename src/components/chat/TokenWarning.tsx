@@ -11,17 +11,65 @@ interface TokenWarningProps {
 export function TokenWarning({ currentTokens, maxTokens }: TokenWarningProps) {
   const tokenPercentage = (currentTokens / maxTokens) * 100;
   const remainingTokens = maxTokens - currentTokens;
+  const usageLevel =
+    tokenPercentage > 95
+      ? "critical"
+      : tokenPercentage > 85
+      ? "high"
+      : tokenPercentage > 70
+      ? "moderate"
+      : "normal";
+
+  // Format the percentage to 1 decimal place
+  const formattedPercentage = Math.round(tokenPercentage * 10) / 10;
 
   return (
-    <Alert variant={tokenPercentage > 90 ? "destructive" : "default"}>
+    <Alert
+      variant={
+        usageLevel === "critical"
+          ? "destructive"
+          : usageLevel === "high"
+          ? "destructive"
+          : "default"
+      }
+    >
       <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Token Usage Warning</AlertTitle>
+      <AlertTitle>
+        {usageLevel === "critical"
+          ? "Token Limit Critical"
+          : usageLevel === "high"
+          ? "Token Usage High"
+          : "Token Usage Information"}
+      </AlertTitle>
       <AlertDescription>
-        {tokenPercentage > 90
-          ? `Only ${remainingTokens} tokens remaining. Please start a new conversation.`
-          : `Using ${currentTokens} of ${maxTokens} tokens (${Math.round(
-              tokenPercentage
-            )}%)`}
+        {usageLevel === "critical" ? (
+          <>
+            <p>
+              Only <strong>{remainingTokens}</strong> tokens remaining (
+              {formattedPercentage}% used). This conversation is reaching its
+              limit. Please start a new conversation soon.
+            </p>
+            <p className="text-xs mt-1">
+              The next message may not be processed if the limit is exceeded.
+            </p>
+          </>
+        ) : usageLevel === "high" ? (
+          <>
+            <p>
+              Using <strong>{currentTokens}</strong> of {maxTokens} tokens (
+              {formattedPercentage}%).
+            </p>
+            <p className="text-xs mt-1">
+              Consider starting a new conversation if you plan to continue this
+              discussion for much longer.
+            </p>
+          </>
+        ) : (
+          <p>
+            Using <strong>{currentTokens}</strong> of {maxTokens} tokens (
+            {formattedPercentage}%)
+          </p>
+        )}
       </AlertDescription>
     </Alert>
   );
