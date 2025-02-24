@@ -6,12 +6,12 @@ import { useAppDispatch } from "@/store/hooks";
 import { createConversation, generateAnalysis } from "@/store/chatSlice";
 import Loading from "@/components/loading";
 
-export function Page() {
+export default function Page() {
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const handleImageSelect = async (imageBase64: string) => {
+  const handleImagesSelect = async (images: { food: string; wine: string }) => {
     try {
       // Create new conversation
       const conversation = await dispatch(
@@ -24,7 +24,8 @@ export function Page() {
       // Analyze image
       await dispatch(
         generateAnalysis({
-          image1: imageBase64,
+          image1: images.food,
+          image2: images.wine,
           conversationId: conversation.id,
         })
       ).unwrap();
@@ -41,7 +42,9 @@ export function Page() {
   if (!hasStartedChat) {
     return (
       <main className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
-        {!hasStartedChat && <InitialUpload onImageSelect={handleImageSelect} />}
+        {!hasStartedChat && (
+          <InitialUpload onImagesSelect={handleImagesSelect} />
+        )}
         <Loading />
       </main>
     );
