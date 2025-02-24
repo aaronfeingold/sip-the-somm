@@ -31,6 +31,10 @@ interface Chat {
   tokenLimit: number;
   warnTokenLimit: boolean;
   analysis: Analysis;
+  images: {
+    image1: string;
+    image2: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
