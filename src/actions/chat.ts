@@ -3,7 +3,7 @@
 import { openai, DEFAULT_MODEL, MAX_COMPLETION_TOKENS } from "@/lib/openai";
 import { revalidatePath } from "next/cache";
 import humps from "humps";
-import type { Message, Analysis, CompletionUsage } from "@/types";
+import type { Message, CompletionUsage } from "@/types";
 import type {
   ChatCompletionMessageParam,
   ChatCompletionContentPart,
@@ -23,7 +23,7 @@ const defaultUsage: CompletionUsage = {
 export async function analyze(
   image1Base64: string,
   image2Base64?: string
-): Promise<unknown> {
+): Promise<Message> {
   try {
     const messages: Array<ChatCompletionMessageParam> = [
       {
@@ -59,7 +59,7 @@ export async function analyze(
       max_tokens: 500,
     } as ChatCompletionCreateParamsNonStreaming);
 
-    return response.choices[0].message.content;
+    return response.choices[0].message as Message;
   } catch (error) {
     console.error("Error analyzing images:", error);
     throw error;
