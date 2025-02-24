@@ -20,8 +20,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <main className="relative min-h-screen flex flex-col justify-center items-center bg-pink-900 text-white p-4 isolate px-6 pt-14 lg:px-8 overflow-hidden">
+      <body className="overflow-hidden">
+        <main className="h-screen bg-pink-900 text-white isolate overflow-hidden">
           {/* Upper left gradient */}
           <div className="absolute top-0 left-0 -z-10 transform-gpu overflow-hidden blur-3xl">
             <div
