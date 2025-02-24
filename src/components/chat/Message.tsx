@@ -1,15 +1,16 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
 import type { Message } from "@/types";
 
 interface ChatMessageProps {
   message: Message;
-  showTokenCount?: boolean;
+  key: number;
 }
-
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, key }: ChatMessageProps) {
   return (
     <div
+      key={key}
       className={`flex ${
         message.role === "user" ? "justify-end" : "justify-start"
       }`}
@@ -22,11 +23,19 @@ export function ChatMessage({ message }: ChatMessageProps) {
         }`}
       >
         <div className="prose prose-invert max-w-none">
-          {Array.isArray(message.content)
-            ? message.content.map((part, index) => (
-                <span key={index}>{part}</span>
-              ))
-            : message.content ?? ""}
+          {message.role === "assistant" ? (
+            <ReactMarkdown>
+              {Array.isArray(message.content)
+                ? message.content.join("")
+                : message.content ?? ""}
+            </ReactMarkdown>
+          ) : Array.isArray(message.content) ? (
+            message.content.map((part, index) => (
+              <span key={index}>{part}</span>
+            ))
+          ) : (
+            message.content ?? ""
+          )}
         </div>
       </div>
     </div>
