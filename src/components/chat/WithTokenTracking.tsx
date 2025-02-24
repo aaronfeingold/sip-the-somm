@@ -2,7 +2,7 @@
 
 import { TokenWarning } from "./TokenWarning";
 import { useAppSelector } from "@/store/hooks";
-import type { Conversation, ChatState } from "@/store/chatSlice";
+import type { Chat, ChatState } from "@/store/chatSlice";
 
 interface WithTokenTrackingProps {
   children: React.ReactNode;
@@ -14,9 +14,9 @@ export function WithTokenTracking({
   conversationId,
 }: WithTokenTrackingProps) {
   const conversation = useAppSelector(
-    (state: { chat: ChatState }): Conversation | undefined =>
+    (state: { chat: ChatState }): Chat | undefined =>
       state.chat.conversations.data.find(
-        (c: Conversation) => c.id === conversationId
+        (c: Chat) => c.id === conversationId
       )
   );
 
