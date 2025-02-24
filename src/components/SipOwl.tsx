@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import sipTheOwl from "@/public/sipTheOwl.svg";
+import sipTheOwl from "../../public/sipTheOwl.svg";
 
 interface SipOwlProps {
   isExpanded?: boolean;
