@@ -1,27 +1,23 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { InitialUpload } from "@/components/chat/InitialUpload";
 import { useAppDispatch } from "@/store/hooks";
 import { createConversation, generateAnalysis } from "@/store/chatSlice";
-import ChatLayout from "@/app/chat/ChatLayout";
+import Loading from "@/components/loading";
 
-export default function ChatPage() {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+export function Page() {
   const [hasStartedChat, setHasStartedChat] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
   const handleImageSelect = async (imageBase64: string) => {
     try {
-      setIsAnalyzing(true);
-
       // Create new conversation
       const conversation = await dispatch(
         createConversation({
           title: "Wine Pairing Analysis",
-          user: 1, // You'll need to handle user ID appropriately
+          user: 1,
         })
       ).unwrap();
 
@@ -37,15 +33,17 @@ export default function ChatPage() {
       router.push(`/chat/${conversation.id}`);
       setHasStartedChat(true);
     } catch (error) {
-      console.error("Failed to generateAnalysis image:", error);
+      console.error("Failed to analyze image:", error);
     } finally {
-      setIsAnalyzing(false);
     }
   };
 
   if (!hasStartedChat) {
-    return <InitialUpload onImageSelect={handleImageSelect} />;
+    return (
+      <main className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
+        {!hasStartedChat && <InitialUpload onImageSelect={handleImageSelect} />}
+        <Loading />
+      </main>
+    );
   }
-
-  return <ChatLayout>{/* Chat content will go here */}</ChatLayout>;
 }
