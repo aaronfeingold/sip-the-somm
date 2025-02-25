@@ -3,22 +3,44 @@
 import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { sendMessage, setActiveConversation } from "@/store/chatSlice";
+import {
+  sendMessage,
+  setActiveConversation,
+  clearError,
+} from "@/store/chatSlice";
 import { ChatMessage } from "@/components/chat/Message";
 import { MessageInput } from "@/components/chat/MessageInput";
 import { TokenWarning } from "@/components/chat/TokenWarning";
 import Loading from "@/components/loading";
+import { useError } from "@/provider/ErrorProvider";
 
 export default function Page() {
   const { id } = useParams() as { id: string };
   const dispatch = useAppDispatch();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { showError } = useError();
 
   const conversation = useAppSelector((state) =>
     state.chat.conversations.data.find((c) => c.id === parseInt(id))
   );
-  const { status } = useAppSelector((state) => state.chat);
+  const { status, conversations } = useAppSelector((state) => state.chat);
 
+  useEffect(() => {
+    if (conversations.error) {
+      // Determine if it's a token error
+      const isTokenError = conversations.error.toLowerCase().includes("token");
+
+      // Show appropriate error
+      showError(
+        conversations.error,
+        isTokenError ? "token" : "default",
+        isTokenError ? 8000 : 6000 // Give more time for token errors
+      );
+
+      // Clear the error from the store after displaying it
+      dispatch(clearError());
+    }
+  }, [conversations.error, dispatch, showError]);
   useEffect(() => {
     if (id) {
       dispatch(setActiveConversation(parseInt(id)));
@@ -31,14 +53,17 @@ export default function Page() {
 
   const handleSendMessage = async (message: string) => {
     if (status === "loading" || !id || !conversation) return;
-
-    await dispatch(
-      sendMessage({
-        conversation: parseInt(id),
-        message,
-        messageHistory: conversation.messages,
-      })
-    );
+    try {
+      await dispatch(
+        sendMessage({
+          conversation: parseInt(id),
+          message,
+          messageHistory: conversation.messages,
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   if (!conversation) {

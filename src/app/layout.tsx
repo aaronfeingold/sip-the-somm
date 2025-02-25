@@ -1,6 +1,6 @@
 import "./globals.css";
 
-import { Providers } from "@/store/provider";
+import { Providers } from "@/provider";
 
 export const metadata = {
   title: "SIP The Owl",

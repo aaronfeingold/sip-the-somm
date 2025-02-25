@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 import { SipOwl } from "@/components/SipOwl";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useDropzone } from "react-dropzone";
+import { useError } from "@/provider/ErrorProvider";
 
 interface DualUploadProps {
   onImagesSelect: (images: { food: string; wine: string }) => void;
+  disabled?: boolean;
 }
 
 type MenuType = "food" | "wine";
@@ -18,14 +19,35 @@ interface UploadState {
   wine: string | null;
 }
 
-export function InitialUpload({ onImagesSelect }: DualUploadProps) {
-  const [error, setError] = useState<string | null>(null);
+export function InitialUpload({
+  onImagesSelect,
+  disabled = false,
+}: DualUploadProps) {
   const [uploadedImages, setUploadedImages] = useState<UploadState>({
     food: null,
     wine: null,
   });
+  const { showError } = useError();
 
   const handleFile = async (file: File, type: MenuType) => {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showError(
+        `The ${type} menu image is too large. Maximum size is 5MB.`,
+        "warning"
+      );
+      return;
+    }
+
+    // Validate mime type
+    if (!file.type.startsWith("image/")) {
+      showError(
+        `Please upload a valid image file for the ${type} menu.`,
+        "warning"
+      );
+      return;
+    }
+
     try {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -35,10 +57,19 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
           [type]: base64.split(",")[1],
         }));
       };
+      reader.onerror = () => {
+        showError(
+          `Failed to process ${type} menu image. Please try again.`,
+          "warning"
+        );
+      };
       reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
-      setError(`Failed to process ${type} menu image. Please try again.`);
+      showError(
+        `Failed to process ${type} menu image. Please try again.`,
+        "warning"
+      );
     }
   };
 
@@ -48,6 +79,12 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
         food: uploadedImages.food,
         wine: uploadedImages.wine,
       });
+    } else {
+      // This should never happen as the button should be disabled, but just in case
+      showError(
+        "Please upload both food and wine menu images before analyzing.",
+        "default"
+      );
     }
   };
 
@@ -63,6 +100,7 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
     },
     accept: { "image/*": [] },
     maxFiles: 1,
+    disabled: disabled,
   });
 
   // Wine menu dropzone
@@ -77,6 +115,7 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
     },
     accept: { "image/*": [] },
     maxFiles: 1,
+    disabled: disabled,
   });
 
   const bothImagesUploaded = uploadedImages.food && uploadedImages.wine;
@@ -99,7 +138,8 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
         <div
           {...getFoodRootProps()}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+            border-2 border-dashed rounded-lg p-8 text-center
+            ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
             transition-colors duration-200
             ${
               isFoodDragActive
@@ -113,7 +153,9 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
           <input {...getFoodInputProps()} />
           <Upload className="mx-auto h-12 w-12 mb-4 text-pink-200" />
           <p className="text-pink-100">
-            {isFoodDragActive
+            {disabled
+              ? "Please wait..."
+              : isFoodDragActive
               ? "Drop your food menu here..."
               : uploadedImages.food
               ? "Food menu uploaded ✓"
@@ -125,7 +167,8 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
         <div
           {...getWineRootProps()}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+            border-2 border-dashed rounded-lg p-8 text-center
+            ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
             transition-colors duration-200
             ${
               isWineDragActive
@@ -139,7 +182,9 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
           <input {...getWineInputProps()} />
           <Upload className="mx-auto h-12 w-12 mb-4 text-pink-200" />
           <p className="text-pink-100">
-            {isWineDragActive
+            {disabled
+              ? "Please wait..."
+              : isWineDragActive
               ? "Drop your wine menu here..."
               : uploadedImages.wine
               ? "Wine menu uploaded ✓"
@@ -147,21 +192,14 @@ export function InitialUpload({ onImagesSelect }: DualUploadProps) {
           </p>
         </div>
 
-        {error && (
-          <div className="col-span-full">
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </div>
-        )}
-
         {bothImagesUploaded && (
           <div className="col-span-full flex justify-center mt-4">
             <Button
               onClick={handleSubmit}
-              className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-2"
+              disabled={disabled}
+              className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Analyze Menus
+              {disabled ? "Processing..." : "Analyze Menus"}
             </Button>
           </div>
         )}

@@ -19,6 +19,7 @@ interface CompletionUsage {
 interface Message {
   role: "user" | "assistant" | "developer";
   content: string; // string for text, unknown since IDK how to type markdown
+  usage?: CompletionUsage;
 }
 
 interface Chat {
@@ -34,4 +35,10 @@ interface Chat {
   updatedAt: string;
 }
 
-export type { Message, Chat, CompletionUsage, Analysis };
+interface TokenError {
+  error: string;
+  tokenCount: number;
+  isApproachingLimit: boolean;
+}
+
+export type { Message, Chat, CompletionUsage, Analysis, TokenError };

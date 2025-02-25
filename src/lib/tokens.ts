@@ -1,47 +1,40 @@
-import { encoding_for_model } from 'tiktoken';
-import type { TiktokenModel } from 'tiktoken';
+import { encode } from "gpt-tokenizer";
 
-// Map OpenAI models to tiktoken models
-const TIKTOKEN_MODELS: Record<string, TiktokenModel> = {
-  'gpt-4-turbo-preview': 'gpt-4',
-  'gpt-4-vision-preview': 'gpt-4',
-  'gpt-4': 'gpt-4',
-  'gpt-3.5-turbo': 'gpt-3.5-turbo',
-};
+export const MAX_COMPLETION_TOKENS = 500;
+export const MAX_TOKENS_PER_CONVERSATION = 4000;
 
-export function countTokens(text: string, model: string = 'gpt-4-turbo-preview'): number {
+export function countTokens(text: string): number {
+  if (!text) return 0;
+
   try {
-    const tiktokenModel = TIKTOKEN_MODELS[model] || model;
-    const encoder = encoding_for_model(tiktokenModel);
-    const tokens = encoder.encode(text);
-    encoder.free(); // Clean up
+    const tokens = encode(text);
     return tokens.length;
   } catch (error) {
-    console.error('Error counting tokens:', error);
-    // Fallback to rough estimation if tiktoken fails
+    console.error("Error counting tokens:", error);
+
     return Math.ceil(text.length / 4);
   }
 }
 
-export function getMessagesTokenCount(messages: Array<{ role: string; content: string }>, model: string = 'gpt-4-turbo-preview'): number {
-  // As per OpenAI's documentation
-  // Every message follows this format: {"role": "user", "content": "hello"}
-  // For GPT models, every message has a 4-token overhead
-  // The final assistant message has a 2-token overhead
-
+export function getMessagesTokenCount(
+  messages: Array<{ role: string; content: string }>
+): number {
   let totalTokens = 0;
 
   for (const message of messages) {
-    totalTokens += countTokens(message.content, model);
-    totalTokens += 4; // Add message overhead
+    totalTokens += countTokens(message.content);
+    totalTokens += 4;
   }
 
-  totalTokens += 2; // Add final overhead
+  totalTokens += 2;
 
   return totalTokens;
 }
 
-export function isWithinTokenLimit(messages: Array<{ role: string; content: string }>, limit: number = 4000, model: string = 'gpt-4-turbo-preview'): boolean {
-  const tokenCount = getMessagesTokenCount(messages, model);
+export function isWithinTokenLimit(
+  messages: Array<{ role: string; content: string }>,
+  limit: number = 4000
+): boolean {
+  const tokenCount = getMessagesTokenCount(messages);
   return tokenCount < limit;
 }
