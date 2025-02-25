@@ -6,13 +6,6 @@ import { encode } from "gpt-tokenizer";
  * which doesn't use WebAssembly and avoids compatibility issues.
  */
 
-// Map OpenAI models to their encoding type
-const MODEL_TO_ENCODING: Record<string, string> = {
-  "gpt-4-turbo-preview": "cl100k_base",
-  "gpt-4-vision-preview": "cl100k_base",
-  "gpt-4": "cl100k_base",
-  "gpt-3.5-turbo": "cl100k_base",
-};
 
 /**
  * Count tokens in a string using GPT tokenizer
@@ -20,10 +13,7 @@ const MODEL_TO_ENCODING: Record<string, string> = {
  * @param model Model name (defaults to gpt-4-turbo-preview)
  * @returns Number of tokens
  */
-export function countTokens(
-  text: string,
-  model: string = "gpt-4-turbo"
-): number {
+export function countTokens(text: string): number {
   if (!text) return 0;
 
   try {
