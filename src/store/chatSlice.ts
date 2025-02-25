@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { analyze, getChatResponse } from "@/actions/chat";
 import { Message, Chat } from "@/types";
 import { ChatState } from "@/store/types";
 import {
@@ -50,7 +49,7 @@ export const generateAnalysis = createAsyncThunk(
     image2?: string;
     conversationId: number;
   }) => {
-    const response = await fetch("/api/openai", {
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -104,7 +103,7 @@ export const sendMessage = createAsyncThunk(
       });
     }
 
-    const response = await fetch("/api/openai", {
+    const response = await fetch("/api/chat", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
