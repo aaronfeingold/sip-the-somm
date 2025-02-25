@@ -65,9 +65,8 @@ export function getMessagesTokenCount(
  */
 export function isWithinTokenLimit(
   messages: Array<{ role: string; content: string }>,
-  limit: number = 4000,
-  model: string = "gpt-4-turbo-preview"
+  limit: number = 4000
 ): boolean {
-  const tokenCount = getMessagesTokenCount(messages, model);
+  const tokenCount = getMessagesTokenCount(messages);
   return tokenCount < limit;
 }
