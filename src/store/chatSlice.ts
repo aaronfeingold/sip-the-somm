@@ -49,13 +49,18 @@ export const generateAnalysis = createAsyncThunk(
     image2?: string;
     conversationId: number;
   }) => {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image1, image2 }),
-    });
+    let response;
+    try {
+      response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image1, image2 }),
+      });
+    } catch (error) {
+      throw new Error(`Failed to generate analysis: ${error}`);
+    }
 
     if (!response.ok) {
       const errorData = await response.json();
