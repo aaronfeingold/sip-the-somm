@@ -37,7 +37,7 @@ export async function analyze(
     const systemPromptTokens = countTokens(systemContent);
     const userPromptTokens = countTokens(userContentText);
 
-    const image1Tokens = Math.ceil(image1Base64.length / 4096) * 85; // Approximation
+    const image1Tokens = Math.ceil(image1Base64.length / 4096) * 85;
     const image2Tokens = image2Base64
       ? Math.ceil(image2Base64.length / 4096) * 85
       : 0;
@@ -47,7 +47,7 @@ export async function analyze(
 
     if (estimatedTokens > 6000) {
       throw new Error(
-        "Image analysis would exceed token limits. Please use smaller images."
+        `Image analysis input token estimation of ${estimatedTokens} would exceed token limits. Please use smaller images.`
       );
     }
 
