@@ -34,8 +34,7 @@ export function countTokens(text: string): number {
  * @returns Total token count
  */
 export function getMessagesTokenCount(
-  messages: Array<{ role: string; content: string }>,
-  model: string = "gpt-4-turbo-preview"
+  messages: Array<{ role: string; content: string }>
 ): number {
   // As per OpenAI's documentation
   // Every message follows this format: {"role": "user", "content": "hello"}
@@ -46,7 +45,7 @@ export function getMessagesTokenCount(
 
   for (const message of messages) {
     // Count tokens in the message content
-    totalTokens += countTokens(message.content, model);
+    totalTokens += countTokens(message.content);
     // Add message overhead (4 tokens per message)
     totalTokens += 4;
   }
