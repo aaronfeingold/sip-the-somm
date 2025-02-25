@@ -1,11 +1,6 @@
 "use server";
 
-import {
-  openai,
-  DEFAULT_MODEL,
-  MAX_COMPLETION_TOKENS,
-  MAX_TOKENS_PER_CONVERSATION,
-} from "@/lib/openai";
+import { openai, DEFAULT_MODEL, MAX_COMPLETION_TOKENS } from "@/lib/openai";
 import {
   countTokens,
   getMessagesTokenCount,
@@ -23,6 +18,7 @@ import type {
   ChatCompletionContentPartImage,
 } from "openai/resources/chat/completions";
 import { systemContent, userContentText } from "@/lib/constants";
+import { MAX_TOKENS_PER_CONVERSATION } from "@/lib/openai";
 
 const defaultUsage: CompletionUsage = {
   completionTokens: 0,
@@ -51,6 +47,7 @@ export async function analyze(
         "Image analysis would exceed token limits. Please use smaller images."
       );
     }
+
     const messages: Array<ChatCompletionMessageParam> = [
       {
         role: "system",
@@ -65,17 +62,19 @@ export async function analyze(
               url: `data:image/jpeg;base64,${image1Base64}`,
             },
           } as ChatCompletionContentPartImage,
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${image2Base64}`,
-            },
-          } as ChatCompletionContentPartImage,
+          image2Base64
+            ? ({
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${image2Base64}`,
+                },
+              } as ChatCompletionContentPartImage)
+            : undefined,
           {
             type: "text",
             text: userContentText,
           } as ChatCompletionContentPart,
-        ] as Array<ChatCompletionContentPart>,
+        ].filter(Boolean) as Array<ChatCompletionContentPart>,
       } as ChatCompletionUserMessageParam,
     ];
 
@@ -85,6 +84,7 @@ export async function analyze(
       max_tokens: 500,
     } as ChatCompletionCreateParamsNonStreaming);
 
+    // Parse usage data if available
     const usage: CompletionUsage = response.usage
       ? JSON.parse(humps.decamelize(JSON.stringify(response.usage)))
       : {
@@ -119,18 +119,15 @@ export async function getChatResponse(
   try {
     const tokenCount = getMessagesTokenCount(messages);
 
-    // Check if we're within the token limit for the conversation
     if (!isWithinTokenLimit(messages, MAX_TOKENS_PER_CONVERSATION)) {
       throw new Error(
         `Token limit exceeded. The conversation has reached ${tokenCount} tokens, which exceeds the limit of ${MAX_TOKENS_PER_CONVERSATION}.`
       );
     }
 
-    // Check if we have enough room for completion tokens
     const availableTokens = MAX_TOKENS_PER_CONVERSATION - tokenCount;
     const requestedTokens = maxCompletionTokens ?? MAX_COMPLETION_TOKENS;
 
-    // If not enough tokens remain, adjust or warn
     const actualMaxTokens = Math.min(requestedTokens, availableTokens - 100); // 100 token buffer
 
     if (actualMaxTokens <= 0) {
@@ -143,15 +140,15 @@ export async function getChatResponse(
       model: DEFAULT_MODEL,
       messages,
       temperature: 0.7,
-      max_tokens: maxCompletionTokens ?? MAX_COMPLETION_TOKENS,
+      max_tokens: actualMaxTokens,
     });
 
     const response = completion.choices[0].message.content || "";
+
     const usage: CompletionUsage = completion.usage
       ? JSON.parse(humps.decamelize(JSON.stringify(completion.usage)))
       : defaultUsage;
 
-    // Revalidate the chat page to reflect new messages
     revalidatePath(`/chat/${conversationId}`);
 
     return {
