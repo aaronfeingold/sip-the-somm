@@ -2,8 +2,11 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { analyze, getChatResponse } from "@/actions/chat";
 import { Message, Chat } from "@/types";
 import { ChatState } from "@/store/types";
-import { MAX_TOKENS_PER_CONVERSATION } from "@/lib/openai";
-import { getMessagesTokenCount, isWithinTokenLimit } from "@/lib/tokens";
+import {
+  getMessagesTokenCount,
+  isWithinTokenLimit,
+  MAX_TOKENS_PER_CONVERSATION,
+} from "@/lib/tokens";
 
 const chatTokenLimit = MAX_TOKENS_PER_CONVERSATION; // arbitrary limit for now...
 
@@ -47,7 +50,19 @@ export const generateAnalysis = createAsyncThunk(
     image2?: string;
     conversationId: number;
   }) => {
-    const analysis = await analyze(image1, image2);
+    const response = await fetch("/api/openai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image1, image2 }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to generate analysis");
+    }
+    const analysis = await response.json();
     const tokenUsage =
       "usage" in analysis
         ? analysis.usage
@@ -89,13 +104,29 @@ export const sendMessage = createAsyncThunk(
       });
     }
 
-    const response = await getChatResponse(newMessageHistory, conversation);
+    const response = await fetch("/api/openai", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: newMessageHistory,
+        conversationId: conversation,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to send message");
+    }
+
+    const responseData = await response.json();
 
     return {
       conversationId: conversation,
-      tokensIn: response.usage.promptTokens,
-      tokensOut: response.usage.completionTokens,
-      totalTokens: response.usage.totalTokens,
+      tokensIn: responseData.usage.promptTokens,
+      tokensOut: responseData.usage.completionTokens,
+      totalTokens: responseData.usage.totalTokens,
       messages: [
         {
           role: "user",
@@ -103,7 +134,7 @@ export const sendMessage = createAsyncThunk(
         } as Message,
         {
           role: "assistant",
-          content: response.content,
+          content: responseData.content,
         } as Message,
       ],
       isApproachingLimit,

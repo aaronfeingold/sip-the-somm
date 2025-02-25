@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate loading={null} persistor={persistor ?? null}>
         <ErrorProvider>
           {children}
           <Toaster richColors />

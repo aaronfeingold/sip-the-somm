@@ -1,6 +1,5 @@
-"use server";
-
-import { openai, DEFAULT_MODEL, MAX_COMPLETION_TOKENS } from "@/lib/openai";
+import OpenAI from "openai";
+import { DEFAULT_MODEL } from "@/lib/openai";
 import {
   countTokens,
   getMessagesTokenCount,
@@ -18,7 +17,10 @@ import type {
   ChatCompletionContentPartImage,
 } from "openai/resources/chat/completions";
 import { systemContent, userContentText } from "@/lib/constants";
-import { MAX_TOKENS_PER_CONVERSATION } from "@/lib/openai";
+import {
+  MAX_COMPLETION_TOKENS,
+  MAX_TOKENS_PER_CONVERSATION,
+} from "@/lib/tokens";
 
 const defaultUsage: CompletionUsage = {
   completionTokens: 0,
@@ -27,6 +29,7 @@ const defaultUsage: CompletionUsage = {
 };
 
 export async function analyze(
+  openai: OpenAI,
   image1Base64: string,
   image2Base64?: string
 ): Promise<Message> {
@@ -112,6 +115,7 @@ export async function analyze(
 }
 
 export async function getChatResponse(
+  openai: OpenAI,
   messages: Array<Message>,
   conversationId: number,
   maxCompletionTokens?: number
