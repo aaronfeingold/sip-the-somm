@@ -32,9 +32,10 @@ export function TokenWarning({ currentTokens, maxTokens }: TokenWarningProps) {
           ? "destructive"
           : "default"
       }
+      className="text-xs md:text-sm"
     >
-      <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>
+      <AlertTriangle className="h-3 w-3 md:h-4 md:w-4" />
+      <AlertTitle className="text-sm md:text-base">
         {usageLevel === "critical"
           ? "Token Limit Critical"
           : usageLevel === "high"

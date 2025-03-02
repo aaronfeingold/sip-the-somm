@@ -1,5 +1,5 @@
+// src/app/layout.tsx
 import "./globals.css";
-
 import { Providers } from "@/provider";
 
 export const metadata = {
@@ -20,8 +20,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="overflow-hidden">
-        <main className="h-screen bg-pink-900 text-white isolate overflow-hidden">
+      <body className="relative">
+        <main className="h-screen w-screen bg-pink-900 text-white isolate overflow-y-auto">
           {/* Upper left gradient */}
           <div className="absolute top-0 left-0 -z-10 transform-gpu overflow-hidden blur-3xl">
             <div

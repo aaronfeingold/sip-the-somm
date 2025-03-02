@@ -18,22 +18,18 @@ export default function Page() {
   const { status, conversations } = useAppSelector((state) => state.chat);
   const { showError } = useError();
 
-  // Check for errors from redux store
   useEffect(() => {
     if (conversations.error) {
-      // Show error with appropriate severity
       const isImageError = conversations.error.toLowerCase().includes("image");
 
       showError(
         conversations.error,
         isImageError ? "warning" : "default",
-        isImageError ? 10000 : 6000 // Give more time for image errors
+        isImageError ? 10000 : 6000
       );
 
-      // Clear the error from the store
       dispatch(clearError());
 
-      // Reset loading state if we had an error during analysis
       if (status === "analyzing") {
         setHasStartedChat(false);
       }
@@ -42,7 +38,6 @@ export default function Page() {
 
   const handleImagesSelect = async (images: { food: string; wine: string }) => {
     try {
-      // Create new conversation
       const conversation = await dispatch(
         createConversation({
           title: "Wine Pairing Analysis",
@@ -52,7 +47,6 @@ export default function Page() {
 
       setHasStartedChat(true);
 
-      // Analyze image
       await dispatch(
         generateAnalysis({
           image1: images.food,
@@ -61,10 +55,8 @@ export default function Page() {
         })
       ).unwrap();
 
-      // Navigate to the conversation
       router.push(`/chat/${conversation.id}`);
     } catch (error) {
-      // Error will be displayed via the useEffect above
       console.error("Failed to analyze image:", error);
       setHasStartedChat(false);
     }

@@ -189,6 +189,23 @@ const chatSlice = createSlice({
           conversation.totalTokens > conversation.tokenLimit * 0.9;
       }
     },
+    // New reducer to delete a conversation
+    deleteConversation(state, action: PayloadAction<number>) {
+      // Filter out the conversation with the specified ID
+      state.conversations.data = state.conversations.data.filter(
+        (c) => c.id !== action.payload
+      );
+
+      // Reset active conversation if the deleted one was active
+      if (state.activeConversation === action.payload) {
+        // If there are other conversations, set the first one as active
+        if (state.conversations.data.length > 0) {
+          state.activeConversation = state.conversations.data[0].id;
+        } else {
+          state.activeConversation = null;
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -273,5 +290,7 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setActiveConversation, clearError } = chatSlice.actions;
+export const { setActiveConversation, clearError, deleteConversation } =
+  chatSlice.actions;
+
 export default chatSlice.reducer;
