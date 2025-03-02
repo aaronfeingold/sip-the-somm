@@ -1,84 +1,116 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { InitialUpload } from "@/components/chat/InitialUpload";
+
+import { useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  createConversation,
-  generateAnalysis,
+  sendMessage,
+  setActiveConversation,
   clearError,
 } from "@/store/chatSlice";
+import { ChatMessage } from "@/components/chat/Message";
+import { MessageInput } from "@/components/chat/MessageInput";
+import { TokenWarning } from "@/components/chat/TokenWarning";
 import Loading from "@/components/loading";
 import { useError } from "@/provider/ErrorProvider";
 
 export default function Page() {
-  const [hasStartedChat, setHasStartedChat] = useState(false);
-  const router = useRouter();
+  const { id } = useParams() as { id: string };
   const dispatch = useAppDispatch();
-  const { status, conversations } = useAppSelector((state) => state.chat);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { showError } = useError();
 
-  // Check for errors from redux store
+  const conversation = useAppSelector((state) =>
+    state.chat.conversations.data.find((c) => c.id === parseInt(id))
+  );
+  const { status, conversations } = useAppSelector((state) => state.chat);
+
   useEffect(() => {
     if (conversations.error) {
-      // Show error with appropriate severity
-      const isImageError = conversations.error.toLowerCase().includes("image");
+      // Determine if it's a token error
+      const isTokenError = conversations.error.toLowerCase().includes("token");
 
+      // Show appropriate error
       showError(
         conversations.error,
-        isImageError ? "warning" : "default",
-        isImageError ? 10000 : 6000 // Give more time for image errors
+        isTokenError ? "token" : "default",
+        isTokenError ? 8000 : 6000 // Give more time for token errors
       );
 
-      // Clear the error from the store
+      // Clear the error from the store after displaying it
       dispatch(clearError());
-
-      // Reset loading state if we had an error during analysis
-      if (status === "analyzing") {
-        setHasStartedChat(false);
-      }
     }
-  }, [conversations.error, dispatch, showError, status]);
+  }, [conversations.error, dispatch, showError]);
 
-  const handleImagesSelect = async (images: { food: string; wine: string }) => {
+  useEffect(() => {
+    if (id) {
+      dispatch(setActiveConversation(parseInt(id)));
+    }
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation?.messages]);
+
+  const handleSendMessage = async (message: string) => {
+    if (status === "loading" || !id || !conversation) return;
     try {
-      // Create new conversation
-      const conversation = await dispatch(
-        createConversation({
-          title: "Wine Pairing Analysis",
-          user: 1,
-        })
-      ).unwrap();
-
-      setHasStartedChat(true);
-
-      // Analyze image
       await dispatch(
-        generateAnalysis({
-          image1: images.food,
-          image2: images.wine,
-          conversationId: conversation.id,
+        sendMessage({
+          conversation: parseInt(id),
+          message,
+          messageHistory: conversation.messages,
         })
       ).unwrap();
-
-      // Navigate to the conversation
-      router.push(`/chat/${conversation.id}`);
     } catch (error) {
-      // Error will be displayed via the useEffect above
-      console.error("Failed to analyze image:", error);
-      setHasStartedChat(false);
+      console.error("Error sending message:", error);
     }
   };
 
+  if (!conversation) {
+    return (
+      <>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <p className="text-pink-300">Conversation not found</p>
+        </div>
+      </>
+    );
+  }
+
   return (
-    <div className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
-      {!hasStartedChat && (
-        <InitialUpload
-          onImagesSelect={handleImagesSelect}
-          disabled={status === "loading" || status === "analyzing"}
-        />
-      )}
-      {(status === "loading" || status === "analyzing") && <Loading />}
-    </div>
+    <>
+      <div className="flex flex-col h-full relative">
+        <div className="flex-1 overflow-y-auto pb-32">
+          {" "}
+          {/* Add padding to bottom to ensure messages aren't hidden behind input */}
+          <div className="max-w-3xl mx-auto p-2 md:p-4 space-y-4 md:space-y-6">
+            {conversation.warnTokenLimit && (
+              <TokenWarning
+                currentTokens={conversation.totalTokens}
+                maxTokens={conversation.tokenLimit}
+              />
+            )}
+            {conversation.messages?.map((msg, idx) => (
+              <ChatMessage key={idx} message={msg} />
+            ))}
+            <Loading />
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-900 to-transparent pt-6">
+          <div className="max-w-3xl mx-auto">
+            <MessageInput
+              onSend={handleSendMessage}
+              disabled={status === "loading" || conversation.warnTokenLimit}
+              placeholder={
+                conversation.warnTokenLimit
+                  ? "Token limit reached. Please start a new conversation."
+                  : "Ask me about the wine pairing..."
+              }
+            />
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -121,88 +121,92 @@ export function InitialUpload({
   const bothImagesUploaded = uploadedImages.food && uploadedImages.wine;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white p-6">
-      <SipOwl className="mb-12" />
+    <div className="min-h-screen flex flex-col items-center justify-center text-white px-4 py-6 md:p-6">
+      <div className="w-full max-w-2xl">
+        <div className="flex justify-center mb-6 md:mb-12">
+          <SipOwl className="w-24 h-24 md:w-32 md:h-32" />
+        </div>
 
-      <h1 className="text-3xl md:text-4xl font-bold mb-6 text-center">
-        Welcome, I&apos;m SIP the Owl, your virtual sommelier
-      </h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6 text-center">
+          Welcome, I&apos;m SIP the Owl, your virtual sommelier
+        </h1>
 
-      <p className="text-lg mb-8 text-center max-w-md">
-        Upload photos of your food and wine menus and I&apos;ll analyze them to
-        suggest the best wine pairings for your dishes.
-      </p>
+        <p className="text-base md:text-lg mb-6 md:mb-8 text-center max-w-md mx-auto">
+          Upload photos of your food and wine menus and I&apos;ll analyze them
+          to suggest the best wine pairings for your dishes.
+        </p>
 
-      <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Food Menu Upload */}
-        <div
-          {...getFoodRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center
-            ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-            transition-colors duration-200
-            ${
-              isFoodDragActive
-                ? "border-pink-400 bg-pink-900/50"
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Food Menu Upload */}
+          <div
+            {...getFoodRootProps()}
+            className={`
+              border-2 border-dashed rounded-lg p-4 md:p-8 text-center
+              ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+              transition-colors duration-200
+              ${
+                isFoodDragActive
+                  ? "border-pink-400 bg-pink-900/50"
+                  : uploadedImages.food
+                  ? "border-green-400 bg-pink-900/50"
+                  : "border-white/30 hover:border-white/50"
+              }
+            `}
+          >
+            <input {...getFoodInputProps()} />
+            <Upload className="mx-auto h-8 w-8 md:h-12 md:w-12 mb-2 md:mb-4 text-pink-200" />
+            <p className="text-pink-100 text-sm md:text-base">
+              {disabled
+                ? "Please wait..."
+                : isFoodDragActive
+                ? "Drop your food menu here..."
                 : uploadedImages.food
-                ? "border-green-400 bg-pink-900/50"
-                : "border-white/30 hover:border-white/50"
-            }
-          `}
-        >
-          <input {...getFoodInputProps()} />
-          <Upload className="mx-auto h-12 w-12 mb-4 text-pink-200" />
-          <p className="text-pink-100">
-            {disabled
-              ? "Please wait..."
-              : isFoodDragActive
-              ? "Drop your food menu here..."
-              : uploadedImages.food
-              ? "Food menu uploaded ✓"
-              : "Upload food menu"}
-          </p>
-        </div>
-
-        {/* Wine Menu Upload */}
-        <div
-          {...getWineRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center
-            ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-            transition-colors duration-200
-            ${
-              isWineDragActive
-                ? "border-pink-400 bg-pink-900/50"
-                : uploadedImages.wine
-                ? "border-green-400 bg-pink-900/50"
-                : "border-white/30 hover:border-white/50"
-            }
-          `}
-        >
-          <input {...getWineInputProps()} />
-          <Upload className="mx-auto h-12 w-12 mb-4 text-pink-200" />
-          <p className="text-pink-100">
-            {disabled
-              ? "Please wait..."
-              : isWineDragActive
-              ? "Drop your wine menu here..."
-              : uploadedImages.wine
-              ? "Wine menu uploaded ✓"
-              : "Upload wine menu"}
-          </p>
-        </div>
-
-        {bothImagesUploaded && (
-          <div className="col-span-full flex justify-center mt-4">
-            <Button
-              onClick={handleSubmit}
-              disabled={disabled}
-              className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {disabled ? "Processing..." : "Analyze Menus"}
-            </Button>
+                ? "Food menu uploaded ✓"
+                : "Upload food menu"}
+            </p>
           </div>
-        )}
+
+          {/* Wine Menu Upload */}
+          <div
+            {...getWineRootProps()}
+            className={`
+              border-2 border-dashed rounded-lg p-4 md:p-8 text-center
+              ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+              transition-colors duration-200
+              ${
+                isWineDragActive
+                  ? "border-pink-400 bg-pink-900/50"
+                  : uploadedImages.wine
+                  ? "border-green-400 bg-pink-900/50"
+                  : "border-white/30 hover:border-white/50"
+              }
+            `}
+          >
+            <input {...getWineInputProps()} />
+            <Upload className="mx-auto h-8 w-8 md:h-12 md:w-12 mb-2 md:mb-4 text-pink-200" />
+            <p className="text-pink-100 text-sm md:text-base">
+              {disabled
+                ? "Please wait..."
+                : isWineDragActive
+                ? "Drop your wine menu here..."
+                : uploadedImages.wine
+                ? "Wine menu uploaded ✓"
+                : "Upload wine menu"}
+            </p>
+          </div>
+
+          {bothImagesUploaded && (
+            <div className="col-span-full flex justify-center mt-4">
+              <Button
+                onClick={handleSubmit}
+                disabled={disabled}
+                className="bg-pink-600 hover:bg-pink-700 text-white px-6 md:px-8 py-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
+              >
+                {disabled ? "Processing..." : "Analyze Menus"}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
