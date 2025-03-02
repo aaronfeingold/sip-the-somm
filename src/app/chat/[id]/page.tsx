@@ -27,20 +27,17 @@ export default function Page() {
 
   useEffect(() => {
     if (conversations.error) {
-      // Determine if it's a token error
       const isTokenError = conversations.error.toLowerCase().includes("token");
 
-      // Show appropriate error
       showError(
         conversations.error,
         isTokenError ? "token" : "default",
-        isTokenError ? 8000 : 6000 // Give more time for token errors
+        isTokenError ? 8000 : 6000
       );
-
-      // Clear the error from the store after displaying it
       dispatch(clearError());
     }
   }, [conversations.error, dispatch, showError]);
+
   useEffect(() => {
     if (id) {
       dispatch(setActiveConversation(parseInt(id)));
@@ -69,7 +66,7 @@ export default function Page() {
   if (!conversation) {
     return (
       <>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center p-4">
           <p className="text-pink-300">Conversation not found</p>
         </div>
       </>
@@ -79,8 +76,9 @@ export default function Page() {
   return (
     <>
       <div className="flex flex-col h-full relative">
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto pb-32">
+          {" "}
+          <div className="max-w-3xl mx-auto p-2 md:p-4 space-y-4 md:space-y-6">
             {conversation.warnTokenLimit && (
               <TokenWarning
                 currentTokens={conversation.totalTokens}
@@ -94,7 +92,7 @@ export default function Page() {
             <div ref={messagesEndRef} />
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-900 to-transparent pt-6">
           <div className="max-w-3xl mx-auto">
             <MessageInput
               onSend={handleSendMessage}

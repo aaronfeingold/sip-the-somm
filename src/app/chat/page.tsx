@@ -1,116 +1,76 @@
 "use client";
-
-import { useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { InitialUpload } from "@/components/chat/InitialUpload";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  sendMessage,
-  setActiveConversation,
+  createConversation,
+  generateAnalysis,
   clearError,
 } from "@/store/chatSlice";
-import { ChatMessage } from "@/components/chat/Message";
-import { MessageInput } from "@/components/chat/MessageInput";
-import { TokenWarning } from "@/components/chat/TokenWarning";
 import Loading from "@/components/loading";
 import { useError } from "@/provider/ErrorProvider";
 
 export default function Page() {
-  const { id } = useParams() as { id: string };
+  const [hasStartedChat, setHasStartedChat] = useState(false);
+  const router = useRouter();
   const dispatch = useAppDispatch();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { showError } = useError();
-
-  const conversation = useAppSelector((state) =>
-    state.chat.conversations.data.find((c) => c.id === parseInt(id))
-  );
   const { status, conversations } = useAppSelector((state) => state.chat);
+  const { showError } = useError();
 
   useEffect(() => {
     if (conversations.error) {
-      // Determine if it's a token error
-      const isTokenError = conversations.error.toLowerCase().includes("token");
+      const isImageError = conversations.error.toLowerCase().includes("image");
 
-      // Show appropriate error
       showError(
         conversations.error,
-        isTokenError ? "token" : "default",
-        isTokenError ? 8000 : 6000 // Give more time for token errors
+        isImageError ? "warning" : "default",
+        isImageError ? 10000 : 6000
       );
 
-      // Clear the error from the store after displaying it
       dispatch(clearError());
+
+      if (status === "analyzing") {
+        setHasStartedChat(false);
+      }
     }
-  }, [conversations.error, dispatch, showError]);
+  }, [conversations.error, dispatch, showError, status]);
 
-  useEffect(() => {
-    if (id) {
-      dispatch(setActiveConversation(parseInt(id)));
-    }
-  }, [id, dispatch]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation?.messages]);
-
-  const handleSendMessage = async (message: string) => {
-    if (status === "loading" || !id || !conversation) return;
+  const handleImagesSelect = async (images: { food: string; wine: string }) => {
     try {
-      await dispatch(
-        sendMessage({
-          conversation: parseInt(id),
-          message,
-          messageHistory: conversation.messages,
+      const conversation = await dispatch(
+        createConversation({
+          title: "Wine Pairing Analysis",
+          user: 1,
         })
       ).unwrap();
+
+      setHasStartedChat(true);
+
+      await dispatch(
+        generateAnalysis({
+          image1: images.food,
+          image2: images.wine,
+          conversationId: conversation.id,
+        })
+      ).unwrap();
+
+      router.push(`/chat/${conversation.id}`);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Failed to analyze image:", error);
+      setHasStartedChat(false);
     }
   };
 
-  if (!conversation) {
-    return (
-      <>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <p className="text-pink-300">Conversation not found</p>
-        </div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <div className="flex flex-col h-full relative">
-        <div className="flex-1 overflow-y-auto pb-32">
-          {" "}
-          {/* Add padding to bottom to ensure messages aren't hidden behind input */}
-          <div className="max-w-3xl mx-auto p-2 md:p-4 space-y-4 md:space-y-6">
-            {conversation.warnTokenLimit && (
-              <TokenWarning
-                currentTokens={conversation.totalTokens}
-                maxTokens={conversation.tokenLimit}
-              />
-            )}
-            {conversation.messages?.map((msg, idx) => (
-              <ChatMessage key={idx} message={msg} />
-            ))}
-            <Loading />
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-pink-900 to-transparent pt-6">
-          <div className="max-w-3xl mx-auto">
-            <MessageInput
-              onSend={handleSendMessage}
-              disabled={status === "loading" || conversation.warnTokenLimit}
-              placeholder={
-                conversation.warnTokenLimit
-                  ? "Token limit reached. Please start a new conversation."
-                  : "Ask me about the wine pairing..."
-              }
-            />
-          </div>
-        </div>
-      </div>
-    </>
+    <div className="w-full max-w-md relative z-10 flex flex-col items-center text-center mx-auto">
+      {!hasStartedChat && (
+        <InitialUpload
+          onImagesSelect={handleImagesSelect}
+          disabled={status === "loading" || status === "analyzing"}
+        />
+      )}
+      {(status === "loading" || status === "analyzing") && <Loading />}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { MessageSquare, PlusSquare, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -19,6 +19,28 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const conversations = useAppSelector((state) => state.chat.conversations);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const hoverZoneRef = useRef<HTMLDivElement>(null);
+
+  // Detect if we're on mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkIfMobile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -45,7 +67,20 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
 
   // Close sidebar when route changes on mobile
   const closeSidebarOnMobile = () => {
-    if (window.innerWidth < 768) {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  // Handle mouse enter/leave for desktop hover effect
+  const handleMouseEnter = () => {
+    if (!isMobile) {
+      setIsSidebarOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile) {
       setIsSidebarOpen(false);
     }
   };
@@ -53,7 +88,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   return (
     <div className="flex h-full">
       {/* Mobile Overlay when sidebar is open */}
-      {isSidebarOpen && (
+      {isSidebarOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
@@ -61,14 +96,23 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       )}
 
       {/* Sidebar Header */}
-      <SidebarHeader
-        isSidebarOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-        title="SIP the Owl"
+      <div className="fixed top-4 left-4 z-50">
+        <SidebarHeader
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          title="SIP the Owl"
+        />
+      </div>
+
+      {/* Hover zone for desktop - invisible area that extends the hover area */}
+      <div
+        ref={hoverZoneRef}
+        className="fixed top-0 left-0 w-8 h-full z-40 hidden md:block"
+        onMouseEnter={handleMouseEnter}
       />
 
       {/* Sidebar Close Button - Only visible when sidebar is open on mobile */}
-      {isSidebarOpen && (
+      {isSidebarOpen && isMobile && (
         <button
           className="fixed top-4 right-4 z-50 p-2 bg-pink-800 rounded-full md:hidden"
           onClick={() => setIsSidebarOpen(false)}
@@ -79,6 +123,9 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
 
       {/* Conversations Sidebar */}
       <div
+        ref={sidebarRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } fixed md:sticky top-0 left-0 w-64 h-screen bg-pink-950 flex-shrink-0 transition-transform duration-300 z-40 pt-20 md:pt-24 overflow-hidden`}
