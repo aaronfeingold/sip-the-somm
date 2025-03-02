@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { MessageSquare, PlusSquare, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -19,32 +19,9 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   const conversations = useAppSelector((state) => state.chat.conversations);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const hoverZoneRef = useRef<HTMLDivElement>(null);
-
-  // Detect if we're on mobile
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkIfMobile);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("resize", checkIfMobile);
-    };
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
 
   const handleDeleteChat = (id: number) => {
     if (confirmDelete === id) {
@@ -65,41 +42,27 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
     }
   };
 
-  // Close sidebar when route changes on mobile
-  const closeSidebarOnMobile = () => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-  };
-
   // Handle mouse enter/leave for desktop hover effect
   const handleMouseEnter = () => {
-    if (!isMobile) {
-      setIsSidebarOpen(true);
-    }
+    setIsSidebarOpen(true);
   };
 
   const handleMouseLeave = () => {
-    if (!isMobile) {
-      setIsSidebarOpen(false);
-    }
+    setIsSidebarOpen(false);
   };
 
   return (
     <div className="flex h-full">
       {/* Mobile Overlay when sidebar is open */}
-      {isSidebarOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" />
       )}
 
       {/* Sidebar Header */}
       <div className="fixed top-4 left-4 z-50">
         <SidebarHeader
           isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
+          toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           title="SIP the Owl"
         />
       </div>
@@ -112,7 +75,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
       />
 
       {/* Sidebar Close Button - Only visible when sidebar is open on mobile */}
-      {isSidebarOpen && isMobile && (
+      {isSidebarOpen && (
         <button
           className="fixed top-4 right-4 z-50 p-2 bg-pink-800 rounded-full md:hidden"
           onClick={() => setIsSidebarOpen(false)}
@@ -127,14 +90,14 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } fixed md:sticky top-0 left-0 w-64 h-screen bg-pink-950 flex-shrink-0 transition-transform duration-300 z-40 pt-20 md:pt-24 overflow-hidden`}
+          isSidebarOpen ? "w-64" : "w-0"
+        } h-screen bg-pink-950 flex-shrink-0 transition-all duration-300 fixed left-0 top-0 z-40 pt-24 overflow-hidden`}
       >
         <div className="flex flex-col h-full">
           <Link
             href="/chat"
             className="flex items-center gap-2 m-2 p-2 bg-pink-800 hover:bg-pink-700 rounded-lg text-white transition-colors duration-200"
-            onClick={closeSidebarOnMobile}
+            onClick={handleMouseLeave}
           >
             <PlusSquare size={20} />
             <span>New Analysis</span>
@@ -153,7 +116,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
                 <Link
                   href={`/chat/${conv.id}`}
                   className="flex items-center gap-2 p-2 flex-grow truncate"
-                  onClick={closeSidebarOnMobile}
+                  onClick={handleMouseLeave}
                 >
                   <MessageSquare size={16} />
                   <span className="truncate">

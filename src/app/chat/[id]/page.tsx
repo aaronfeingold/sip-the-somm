@@ -31,7 +31,7 @@ export default function Page() {
 
       showError(
         conversations.error,
-        isTokenError ? "token" : "default",
+        isTokenError ? "warning" : "default",
         isTokenError ? 8000 : 6000
       );
       dispatch(clearError());

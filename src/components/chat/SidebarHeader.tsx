@@ -20,13 +20,15 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           className="cursor-pointer h-12 w-12"
           onClick={toggleSidebar}
         />
-      </div>
-      <div
-        className={`transition-all duration-300 overflow-hidden whitespace-nowrap font-medium text-pink-100
-          ${isSidebarOpen ? "w-0 opacity-0" : "w-auto opacity-100"}
+        {isSidebarOpen && (
+          <div
+            className={`transition-all duration-300 overflow-hidden whitespace-nowrap font-medium text-pink-100
+           w-auto
         `}
-      >
-        {title}
+          >
+            {title}
+          </div>
+        )}
       </div>
     </div>
   );

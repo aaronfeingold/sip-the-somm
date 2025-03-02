@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload } from "lucide-react";
+import { Upload, Info } from "lucide-react";
 import { SipOwl } from "@/components/SipOwl";
 import { Button } from "@/components/ui/button";
 import { useDropzone } from "react-dropzone";
@@ -29,6 +29,56 @@ export function InitialUpload({
   });
   const { showError } = useError();
 
+  // Function to compress image before upload
+  const compressImage = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions (max 1000px width/height)
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1000;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          // Create canvas and draw resized image
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to base64 with reduced quality (0.7)
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(compressedBase64.split(",")[1]);
+        };
+
+        img.src = event.target?.result as string;
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Error reading file"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFile = async (file: File, type: MenuType) => {
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -49,21 +99,12 @@ export function InitialUpload({
     }
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setUploadedImages((prev) => ({
-          ...prev,
-          [type]: base64.split(",")[1],
-        }));
-      };
-      reader.onerror = () => {
-        showError(
-          `Failed to process ${type} menu image. Please try again.`,
-          "warning"
-        );
-      };
-      reader.readAsDataURL(file);
+      // Compress image before setting
+      const compressedBase64 = await compressImage(file);
+      setUploadedImages((prev) => ({
+        ...prev,
+        [type]: compressedBase64,
+      }));
     } catch (err) {
       console.error(err);
       showError(
@@ -135,6 +176,16 @@ export function InitialUpload({
           Upload photos of your food and wine menus and I&apos;ll analyze them
           to suggest the best wine pairings for your dishes.
         </p>
+
+        {/* Image recommendation notice */}
+        <div className="bg-pink-800/50 rounded-lg p-3 mb-6 flex items-start gap-2 max-w-md mx-auto">
+          <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-pink-200" />
+          <p className="text-sm text-pink-100">
+            For best results, use clear images under 5MB. Images will be
+            automatically optimized to reduce token usage. If you encounter
+            errors, try cropping or taking clearer photos.
+          </p>
+        </div>
 
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Food Menu Upload */}

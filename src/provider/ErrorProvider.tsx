@@ -1,88 +1,84 @@
-"use client";
+// src/provider/ErrorProvider.tsx
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { AlertCircle, X } from "lucide-react";
 
-import React, { createContext, useContext, useCallback } from "react";
-import { toast } from "sonner";
-import { XCircle } from "lucide-react";
-
-// Define the error types we'll support
-export type ErrorSeverity = "default" | "critical" | "warning" | "token";
+type ErrorType = "default" | "warning";
 
 interface ErrorContextType {
-  showError: (
-    message: string,
-    severity?: ErrorSeverity,
-    duration?: number
-  ) => void;
+  showError: (message: string, type?: ErrorType, duration?: number) => void;
+  hideError: () => void;
 }
 
-// Create context with default values
 const ErrorContext = createContext<ErrorContextType>({
   showError: () => {},
+  hideError: () => {},
 });
 
-// Custom hook for easy access to the error context
 export const useError = () => useContext(ErrorContext);
 
-// Context Provider component
-export function ErrorProvider({ children }: { children: React.ReactNode }) {
-  // Show an error with the given message and optional severity
-  const showError = useCallback(
-    (
-      message: string,
-      severity: ErrorSeverity = "default",
-      duration: number = 5000
-    ) => {
-      // Create icon based on severity
-      const icon = (
-        <XCircle
-          className={`h-5 w-5 ${
-            severity === "token"
-              ? "text-pink-500"
-              : severity === "warning"
-              ? "text-amber-500"
-              : "text-destructive"
-          }`}
-        />
-      );
+export const ErrorProvider = ({ children }: { children: ReactNode }) => {
+  const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<ErrorType>("default");
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-      // Determine toast type based on severity
-      switch (severity) {
-        case "critical":
-          toast.error(message, {
-            icon,
-            duration,
-            className: "bg-destructive text-destructive-foreground",
-          });
-          break;
-        case "warning":
-          toast.warning(message, {
-            icon,
-            duration,
-            className:
-              "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-          });
-          break;
-        case "token":
-          toast.error(message, {
-            icon,
-            duration,
-            className:
-              "bg-pink-700/10 text-pink-700 dark:text-pink-300 border border-pink-500/20",
-          });
-          break;
-        default:
-          toast(message, {
-            icon,
-            duration,
-          });
-      }
-    },
-    []
-  );
+  const showError = (
+    message: string,
+    type: ErrorType = "default",
+    duration: number = 6000
+  ) => {
+    setError(message);
+    setErrorType(type);
+
+    // Clear any existing timeout
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Set a new timeout to hide the error after the specified duration
+    const id = setTimeout(() => {
+      setError(null);
+    }, duration);
+
+    setTimeoutId(id);
+  };
+
+  const hideError = () => {
+    setError(null);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+  };
 
   return (
-    <ErrorContext.Provider value={{ showError }}>
+    <ErrorContext.Provider value={{ showError, hideError }}>
       {children}
+
+      {/* Fixed position error notification always at the bottom of the viewport */}
+      {error && (
+        <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4">
+          <div
+            className={`
+            flex items-center gap-2 rounded-lg p-3 shadow-lg max-w-md w-full
+            ${
+              errorType === "warning"
+                ? "bg-amber-600 text-white"
+                : "bg-red-500 text-white"
+            }
+          `}
+          >
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="flex-1 text-sm">{error}</p>
+            <button
+              onClick={hideError}
+              className="rounded-full p-1 hover:bg-black/10"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </ErrorContext.Provider>
   );
-}
+};
