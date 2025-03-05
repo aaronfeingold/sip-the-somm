@@ -39,12 +39,10 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
       setError(message);
       setErrorType(type);
 
-      // Clear any existing timeout
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
 
-      // Set a new timeout to hide the error after the specified duration
       if (duration > 0) {
         const id = setTimeout(() => {
           hideError();
@@ -58,8 +56,6 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ErrorContext.Provider value={{ showError, hideError }}>
       {children}
-
-      {/* Fixed position error notification always at the bottom of the viewport */}
       {error && (
         <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4">
           <div
