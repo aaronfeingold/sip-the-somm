@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import "./globals.css";
 import { Providers } from "@/provider";
 
@@ -19,9 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="relative">
-        <main className="h-screen w-screen bg-pink-900 text-white isolate overflow-y-auto">
+    <html lang="en" className="h-full overflow-hidden">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
+      </head>
+      <body className="h-full overflow-hidden">
+        <main className="h-screen w-screen bg-pink-900 text-white isolate overflow-hidden">
           {/* Upper left gradient */}
           <div className="absolute top-0 left-0 -z-10 transform-gpu overflow-hidden blur-3xl">
             <div
