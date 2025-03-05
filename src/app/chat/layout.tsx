@@ -52,7 +52,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Mobile Overlay when sidebar is open */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" />
@@ -153,7 +153,7 @@ export default function ChatLayout({ children }: ChatLayoutProps) {
 
       {/* Main Chat Area */}
       <div
-        className={`flex-1 w-full transition-all duration-300 h-screen md:ml-64 pt-16 md:pt-0`}
+        className={`flex-1 w-full transition-all duration-300 h-screen md:ml-64 pt-16 md:pt-0 overflow-hidden`}
       >
         {children}
       </div>
