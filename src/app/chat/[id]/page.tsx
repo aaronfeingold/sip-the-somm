@@ -28,11 +28,14 @@ export default function Page() {
   useEffect(() => {
     if (conversations.error) {
       const isTokenError = conversations.error.toLowerCase().includes("token");
+      const isTimeoutError = conversations.error
+        .toLowerCase()
+        .includes("timeout");
 
       showError(
         conversations.error,
-        isTokenError ? "warning" : "default",
-        isTokenError ? 8000 : 6000
+        isTokenError || isTimeoutError ? "warning" : "default",
+        isTokenError || isTimeoutError ? 8000 : 6000
       );
       dispatch(clearError());
     }
