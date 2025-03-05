@@ -1,5 +1,10 @@
-// src/provider/ErrorProvider.tsx
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 import { AlertCircle, X } from "lucide-react";
 
 type ErrorType = "default" | "warning";
@@ -21,34 +26,34 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
   const [errorType, setErrorType] = useState<ErrorType>("default");
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  const showError = (
-    message: string,
-    type: ErrorType = "default",
-    duration: number = 6000
-  ) => {
-    setError(message);
-    setErrorType(type);
-
-    // Clear any existing timeout
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    // Set a new timeout to hide the error after the specified duration
-    const id = setTimeout(() => {
-      setError(null);
-    }, duration);
-
-    setTimeoutId(id);
-  };
-
-  const hideError = () => {
+  const hideError = useCallback(() => {
     setError(null);
     if (timeoutId) {
       clearTimeout(timeoutId);
       setTimeoutId(null);
     }
-  };
+  }, [timeoutId]);
+
+  const showError = useCallback(
+    (message: string, type: ErrorType = "default", duration: number = 6000) => {
+      setError(message);
+      setErrorType(type);
+
+      // Clear any existing timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Set a new timeout to hide the error after the specified duration
+      if (duration > 0) {
+        const id = setTimeout(() => {
+          hideError();
+        }, duration);
+        setTimeoutId(id);
+      }
+    },
+    [hideError, timeoutId]
+  );
 
   return (
     <ErrorContext.Provider value={{ showError, hideError }}>
