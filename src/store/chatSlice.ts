@@ -50,6 +50,10 @@ export const generateAnalysis = createAsyncThunk(
     conversationId: number;
   }) => {
     let response;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
       response = await fetch("/api/chat", {
         method: "POST",
@@ -58,7 +62,14 @@ export const generateAnalysis = createAsyncThunk(
         },
         body: JSON.stringify({ image1, image2 }),
       });
+      clearTimeout(timeoutId);
     } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new Error(
+          "Request timed out. Please try again with smaller images."
+        );
+      }
       throw new Error(`Failed to generate analysis: ${error}`);
     }
 
@@ -108,41 +119,57 @@ export const sendMessage = createAsyncThunk(
       });
     }
 
-    const response = await fetch("/api/chat", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messages: newMessageHistory,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: newMessageHistory,
+          conversationId: conversation,
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send message");
+      }
+
+      const responseData = await response.json();
+
+      return {
         conversationId: conversation,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to send message");
+        tokensIn: responseData.usage.promptTokens,
+        tokensOut: responseData.usage.completionTokens,
+        totalTokens: responseData.usage.totalTokens,
+        messages: [
+          {
+            role: "user",
+            content: message,
+          } as Message,
+          {
+            role: "assistant",
+            content: responseData.content,
+          } as Message,
+        ],
+        isApproachingLimit,
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return rejectWithValue({
+          error: "Request timed out. Please try again with a shorter message.",
+          isApproachingLimit,
+        });
+      }
+      throw error;
     }
-
-    const responseData = await response.json();
-
-    return {
-      conversationId: conversation,
-      tokensIn: responseData.usage.promptTokens,
-      tokensOut: responseData.usage.completionTokens,
-      totalTokens: responseData.usage.totalTokens,
-      messages: [
-        {
-          role: "user",
-          content: message,
-        } as Message,
-        {
-          role: "assistant",
-          content: responseData.content,
-        } as Message,
-      ],
-      isApproachingLimit,
-    };
   }
 );
 
